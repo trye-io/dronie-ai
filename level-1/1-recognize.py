@@ -24,6 +24,11 @@ def render_frame(result, output_image, timestamp_ms):
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0,0))
 
+    # проходимо по усім жестам та друкуємо їхні імена
+    if result.gestures:
+        for gesture in result.gestures:
+            print(gesture[0].category_name)
+
 options = GestureRecognizerOptions(
     base_options=BaseOptions(model_asset_path=MODEL_PATH),
     running_mode=VisionRunningMode.LIVE_STREAM, # режим використання 
