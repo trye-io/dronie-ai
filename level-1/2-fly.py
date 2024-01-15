@@ -59,10 +59,9 @@ frame_read = drone.get_frame_read()
 is_flying = False # статус дрона, True -- в польоті
                   # False -- на землі
 
-timestamp = 0 # лічильник, необхідний для методу .recognize_async()
+timestamp = 0 
 is_running = True
 
-# ініціалізуємо розпізнавач і використовуємо його в циклі
 with GestureRecognizer.create_from_options(options) as recognizer:
     while is_running: 
         for event in pygame.event.get():

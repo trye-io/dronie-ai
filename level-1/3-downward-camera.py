@@ -6,6 +6,11 @@ import mediapipe as mp
 from helpers import draw_landmarks 
 import threading 
 
+left_right_velocity = 0
+forward_backward_velocity = 0
+up_down_velocity = 0
+yaw_velocity = 0
+
 
 BaseOptions = mp.tasks.BaseOptions 
 GestureRecognizer = mp.tasks.vision.GestureRecognizer 
@@ -78,6 +83,46 @@ with GestureRecognizer.create_from_options(options) as recognizer:
                 if event.key == pygame.K_l and is_flying:
                     is_flying = False
                     threading.Thread(target=drone.land).start()
+                if event.key == pygame.K_LEFT:
+                    left_right_velocity = 50
+                if event.key == pygame.K_RIGHT:
+                    left_right_velocity = -50
+                if event.key == pygame.K_UP:
+                    forward_backward_velocity = 50
+                if event.key == pygame.K_DOWN:
+                    forward_backward_velocity = -50
+                if event.key == pygame.K_w:
+                    up_down_velocity = 50
+                if event.key == pygame.K_s:
+                    up_down_velocity = -50
+                if event.key == pygame.K_a:
+                    yaw_velocity = 50
+                if event.key == pygame.K_d:
+                    yaw_velocity = -50
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    left_right_velocity = 0
+                if event.key == pygame.K_RIGHT:
+                    left_right_velocity = 0
+                if event.key == pygame.K_UP:
+                    forward_backward_velocity = 0
+                if event.key == pygame.K_DOWN:
+                    forward_backward_velocity = 0
+                if event.key == pygame.K_w:
+                    up_down_velocity = 0
+                if event.key == pygame.K_s:
+                    up_down_velocity = 0
+                if event.key == pygame.K_a:
+                    yaw_velocity = 0
+                if event.key == pygame.K_d:
+                    yaw_velocity = 0
+        if is_flying:
+            drone.send_rc_control(
+                left_right_velocity,
+                forward_backward_velocity,
+                up_down_velocity,
+                yaw_velocity
+            )
 
         frame = frame_read.frame 
 
