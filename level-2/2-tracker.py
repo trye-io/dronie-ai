@@ -62,7 +62,7 @@ frame_read = drone.get_frame_read()
 is_tracking = False # статус відстежувача, True -- стежити
                     # False -- не стежити
 
-PID = (0.2, 0, 0.2) # коефіцієнти ПІД контролера
+PID = (0.15, 0, 0.15) # коефіцієнти ПІД контролера
 error = 0 # помилка (різниця між центром зображення та центром обличчя)
 
 timestamp = 0
@@ -74,6 +74,7 @@ with FaceDetector.create_from_options(options) as detector:
             if event.type == pygame.QUIT:
                 drone.streamoff()
                 is_running = False
+            # перемикаємо режими за допомогою клавіш 0 та 1
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     is_tracking = True

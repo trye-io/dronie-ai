@@ -4,6 +4,7 @@ import numpy as np
 import cv2 
 import mediapipe as mp
 from helpers import draw_bbox
+import threading # завантажуємо threding для асинхронного виконання
 
 BaseOptions = mp.tasks.BaseOptions
 FaceDetector = mp.tasks.vision.FaceDetector
@@ -14,7 +15,6 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 
 def render_frame(result, output_image, timestamp_ms):
-    # позначаємо що змінна є глобальною
     global error
 
     frame = draw_bbox(output_image.numpy_view(), result)
@@ -26,7 +26,6 @@ def render_frame(result, output_image, timestamp_ms):
 
     if result.detections:
         for detection in result.detections:
-            # знаходимо центр зображення по осі x 
             center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
         if is_tracking:
             error = track_face(center_x, error)
@@ -35,8 +34,9 @@ def track_face(center_x, error):
     current_error = center_x - WIDTH // 2
     delta = current_error - error
     yaw_velocity = int(PID[0] * current_error + PID[2] * delta)
-    print(yaw_velocity)
-    # потім тут ми передамо команди на дрон за допомогою .send_rc_control()
+    # замість друку, передаємо на дрон команди, але тільки якщо дрон в польоті
+    if is_flying: 
+        drone.send_rc_control(0, 0, 0, yaw_velocity)
 
     return current_error
 
@@ -58,12 +58,13 @@ drone = Tello()
 drone.connect()
 drone.streamon()
 frame_read = drone.get_frame_read()
+is_flying = False # статус дрона, True -- в польоті
+                  # False -- на землі
 
-is_tracking = False # статус відстежувача, True -- стежити
-                    # False -- не стежити
+is_tracking = False
 
-PID = (0.2, 0, 0.2) # коефіцієнти ПІД контролера
-error = 0 # помилка (різниця між центром зображення та центром обличчя)
+PID = (0.15, 0, 0.15)
+error = 0
 
 timestamp = 0
 is_running = True
@@ -72,13 +73,28 @@ with FaceDetector.create_from_options(options) as detector:
     while is_running: 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                # якщо виходимо з програми, і ми ще в польоті, сідаємо 
+                if is_flying: 
+                    threading.Thread(target=drone.land).start()
+                    is_flying = False
                 drone.streamoff()
                 is_running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     is_tracking = True
-                if event.type == pygame.K_0:
+                if event.key == pygame.K_0:
                     is_tracking = False
+                    # передаємо нульові швидкості, які можуть бути ненульові
+                    # з попереднього використання Режиму 1
+                    drone.send_rc_control(0, 0, 0, 0)
+                # заради безпеки, забезпечуємо зліт та посадку за допомогою 
+                # клавіш T (злетіти) та L (сісти)
+                if event.key == pygame.K_t and not(is_flying):
+                    is_flying = True
+                    threading.Thread(target=drone.takeoff).start()
+                if event.key == pygame.K_l and is_flying:
+                    is_flying = False
+                    threading.Thread(target=drone.land).start()
 
         frame = frame_read.frame 
 
@@ -92,6 +108,8 @@ with FaceDetector.create_from_options(options) as detector:
         )
 
         timestamp += 1
+
+        print(drone.get_battery())
 
         pygame.display.flip() 
         clock.tick(FPS)
