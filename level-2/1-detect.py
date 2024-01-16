@@ -16,24 +16,24 @@ MODEL_PATH = 'level-2/blaze_face_short_range.tflite' # шлях до модел�
 
 def render_frame(result, output_image, timestamp_ms):
 
-    # малюємо ориєнтирні точки на зображенні
+    # малюємо обмежувальну коробку
     frame = draw_bbox(output_image.numpy_view(), result)
 
-    # безпосереднє зображення на екрані (скопійовано з циклу)
+    # безпосереднє зображення на екрані
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0,0))
 
-    # проходимо по усім жестам та друкуємо їхні імена
-    # if result.gestures:
-    #     for gesture in result.gestures:
-    #         print(gesture[0].category_name)
+    # для усіх виявлених облич, друкуємо їхні координати
+    if result.detections:
+        for detection in result.detections:
+            print(detection.bounding_box)
 
 options = FaceDetectorOptions(
     base_options=BaseOptions(model_asset_path=MODEL_PATH),
     running_mode=VisionRunningMode.LIVE_STREAM, # режим використання 
-    result_callback=render_frame # функція, яка буде викликатись, коли модель розпізнала жест 
+    result_callback=render_frame # функція, яка буде викликатись, коли модель виявлення обличчя 
 )
 
 WIDTH = 960
@@ -49,7 +49,7 @@ drone.connect()
 drone.streamon()
 frame_read = drone.get_frame_read()
 
-timestamp = 0 # лічильник, необхідний для методу .recognize_async()
+timestamp = 0 # лічильник, необхідний для методу .detect_async()
 is_running = True
 
 # ініціалізуємо детектор і використовуємо його в циклі
@@ -70,10 +70,10 @@ with FaceDetector.create_from_options(options) as detector:
         # frame = pygame.surfarray.make_surface(frame)
         # screen.blit(frame, (0,0))
 
-        # переводимо зображення у формат, який зрозумілий фунції .recognize_async()
+        # переводимо зображення у формат, який зрозумілий фунції .detect_async()
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
 
-        # викликаємо фунцію, яка розпізнає жест / використовуємо розпізнавач
+        # викликаємо фунцію, яка виявляє обличчя / використовуємо детектор
         detector.detect_async(
             mp_image,
             timestamp 
