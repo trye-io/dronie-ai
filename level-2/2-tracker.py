@@ -13,8 +13,6 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 
 def render_frame(result, output_image, timestamp_ms):
-    # позначаємо що змінна є глобальною
-    global error
     
     frame = output_image.numpy_view()
 
@@ -29,25 +27,22 @@ def render_frame(result, output_image, timestamp_ms):
                 thickness=2
             )
             # витягуємо центр виявленного обличчя
-            center_x = bbox.origin_x + bbox.width // 2
+            face_center = bbox.origin_x + bbox.width // 2
         # якщо дрон у режимі відстеження, тоді викликаємо відстежувач
         if is_tracking:
-            error = track_face(center_x, error)
+            track_face(face_center)
 
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
 
-def track_face(center_x, error):
-    current_error = center_x - WIDTH // 2
-    delta = current_error - error
-    yaw_velocity = int(PID[0] * current_error + PID[2] * delta)
-    print(yaw_velocity)
-
+def track_face(face_center):
+    error = FRAME_CENTER - face_center
+    yaw_velocity = int(Kp * error)
     # потім тут ми передамо команди на дрон за допомогою .send_rc_control()
 
-    return current_error
+    print(yaw_velocity)
 
 options = FaceDetectorOptions(
     base_options=BaseOptions(model_asset_path=MODEL_PATH),
@@ -57,6 +52,7 @@ options = FaceDetectorOptions(
 
 WIDTH = 960
 HEIGHT = 720
+FRAME_CENTER = WIDTH / 2
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -71,8 +67,7 @@ frame_read = drone.get_frame_read()
 is_tracking = False # статус відстежувача, True -- стежити
                     # False -- не стежити
 
-PID = (0.15, 0, 0.15) # коефіцієнти ПІД контролера
-error = 0 # помилка (різниця між центром зображення та центром обличчя)
+Kp = -0.125
 
 timestamp = 0
 is_running = True

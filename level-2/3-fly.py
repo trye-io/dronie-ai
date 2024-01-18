@@ -14,7 +14,6 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 
 def render_frame(result, output_image, timestamp_ms):
-    global error
     
     frame = output_image.numpy_view()
 
@@ -28,24 +27,21 @@ def render_frame(result, output_image, timestamp_ms):
                 color=(255, 0, 0),
                 thickness=2
             )
-            center_x = bbox.origin_x + bbox.width // 2
+            face_center = bbox.origin_x + bbox.width // 2
         if is_tracking:
-            error = track_face(center_x, error)
+            track_face(face_center)
 
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
 
-def track_face(face_center, error):
-    current_error = FRAME_CENTER - face_center
-    delta = current_error - error
-    yaw_velocity = int(Kp * current_error + Kd * delta)
+def track_face(face_center):
+    error = FRAME_CENTER - face_center
+    yaw_velocity = int(Kp * error)
     # замість друку, передаємо на дрон команди, але тільки якщо дрон в польоті
     if is_flying: 
         drone.send_rc_control(0, 0, 0, yaw_velocity)
-
-    return current_error
 
 options = FaceDetectorOptions(
     base_options=BaseOptions(model_asset_path=MODEL_PATH),
@@ -72,8 +68,6 @@ is_flying = False # статус дрона, True -- в польоті
 is_tracking = False
 
 Kp = -0.125
-Kd = 0
-error = 0
 
 timestamp = 0
 is_running = True
