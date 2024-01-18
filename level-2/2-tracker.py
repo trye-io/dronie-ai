@@ -52,7 +52,7 @@ options = FaceDetectorOptions(
 
 WIDTH = 960
 HEIGHT = 720
-FRAME_CENTER = WIDTH / 2
+FRAME_CENTER = WIDTH / 2 # центр зображення по осі x
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -67,7 +67,7 @@ frame_read = drone.get_frame_read()
 is_tracking = False # статус відстежувача, True -- стежити
                     # False -- не стежити
 
-Kp = -0.125
+Kp = -0.125 # коефіцієнт пропорційного компонента ПІД регулятор 
 
 timestamp = 0
 is_running = True

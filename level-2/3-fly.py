@@ -77,13 +77,16 @@ with FaceDetector.create_from_options(options) as detector:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 # якщо виходимо з програми, і ми ще в польоті, сідаємо 
+                # і перемикаємо is_flying та is_tracking на False
                 if is_flying: 
                     threading.Thread(target=drone.land).start()
+                    is_tracking = False
                     is_flying = False
                 drone.streamoff()
                 is_running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_1:
+                # ми можемо переключити режим, тільки якщо летимо
+                if event.key == pygame.K_1 and is_flying:
                     is_tracking = True
                 if event.key == pygame.K_0:
                     is_tracking = False
@@ -112,8 +115,6 @@ with FaceDetector.create_from_options(options) as detector:
         )
 
         timestamp += 1
-
-        print(drone.get_battery())
 
         pygame.display.flip() 
         clock.tick(FPS)
