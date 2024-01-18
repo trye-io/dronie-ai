@@ -26,14 +26,14 @@ def render_frame(result, output_image, timestamp_ms):
 
     if result.detections:
         for detection in result.detections:
-            center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
+            face_center = detection.bounding_box.origin_x + detection.bounding_box.width // 2
         if is_tracking:
-            error = track_face(center_x, error)
+            error = track_face(face_center, error)
 
-def track_face(center_x, error):
-    current_error = center_x - WIDTH // 2
+def track_face(face_center, error):
+    current_error = FRAME_CENTER - face_center
     delta = current_error - error
-    yaw_velocity = int(PID[0] * current_error + PID[2] * delta)
+    yaw_velocity = int(Kp * current_error + Kd * delta)
     # замість друку, передаємо на дрон команди, але тільки якщо дрон в польоті
     if is_flying: 
         drone.send_rc_control(0, 0, 0, yaw_velocity)
@@ -48,6 +48,7 @@ options = FaceDetectorOptions(
 
 WIDTH = 960
 HEIGHT = 720
+FRAME_CENTER = WIDTH / 2
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -63,7 +64,8 @@ is_flying = False # статус дрона, True -- в польоті
 
 is_tracking = False
 
-PID = (0.15, 0, 0.15)
+Kp = -0.125
+Kd = 0
 error = 0
 
 timestamp = 0
@@ -94,6 +96,7 @@ with FaceDetector.create_from_options(options) as detector:
                     threading.Thread(target=drone.takeoff).start()
                 if event.key == pygame.K_l and is_flying:
                     is_flying = False
+                    is_tracking = False # Вимикаємо режим слідкування! 
                     threading.Thread(target=drone.land).start()
 
         frame = frame_read.frame 
