@@ -3,7 +3,7 @@ from djitellopy import Tello
 import numpy as np 
 import cv2 
 import mediapipe as mp
-import threading # завантажуємо threding для асинхронного виконання
+import threading
 
 BaseOptions = mp.tasks.BaseOptions
 FaceDetector = mp.tasks.vision.FaceDetector
@@ -14,6 +14,7 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 
 def render_frame(result, output_image, timestamp_ms):
+    # зазначаємо що помилка -- глобальна змінна
     global error
     
     frame = output_image.numpy_view()
@@ -25,26 +26,31 @@ def render_frame(result, output_image, timestamp_ms):
                 frame,
                 (bbox.origin_x, bbox.origin_y),
                 (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height),
-                color=(255,0,0),
+                color=(255, 0, 0),
                 thickness=2
             )
-            center_x = bbox.origin_x + bbox.width // 2
+            face_center = bbox.origin_x + bbox.width // 2
         if is_tracking:
-            error = track_face(center_x, error)
+            # перезаписуємо помилку
+            error = track_face(face_center, error)
 
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
 
+# приймає новий аргумент, error -- попередня помилка
 def track_face(face_center, error):
     current_error = FRAME_CENTER - face_center
-    delta = current_error - error
+    # розраховуємо диференціал
+    delta = current_error - error 
+    # використовуємо диференціал
     yaw_velocity = int(Kp * current_error + Kd * delta)
     # замість друку, передаємо на дрон команди, але тільки якщо дрон в польоті
     if is_flying: 
         drone.send_rc_control(0, 0, 0, yaw_velocity)
 
+    # повертаємо поточну помилку, котра в свою чергу стане error
     return current_error
 
 options = FaceDetectorOptions(
@@ -66,14 +72,13 @@ drone = Tello()
 drone.connect()
 drone.streamon()
 frame_read = drone.get_frame_read()
-is_flying = False # статус дрона, True -- в польоті
-                  # False -- на землі
+is_flying = False 
 
 is_tracking = False
 
 Kp = -0.125
-Kd = 0
-error = 0
+Kd = 0.125 # коефіцієнт диференційнох компоненти
+error = 0 # попередня помилка
 
 timestamp = 0
 is_running = True
@@ -82,28 +87,24 @@ with FaceDetector.create_from_options(options) as detector:
     while is_running: 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # якщо виходимо з програми, і ми ще в польоті, сідаємо 
                 if is_flying: 
                     threading.Thread(target=drone.land).start()
+                    is_tracking = False
                     is_flying = False
                 drone.streamoff()
                 is_running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_1:
+                if event.key == pygame.K_1 and is_flying:
                     is_tracking = True
                 if event.key == pygame.K_0:
                     is_tracking = False
-                    # передаємо нульові швидкості, які можуть бути ненульові
-                    # з попереднього використання Режиму 1
                     drone.send_rc_control(0, 0, 0, 0)
-                # заради безпеки, забезпечуємо зліт та посадку за допомогою 
-                # клавіш T (злетіти) та L (сісти)
                 if event.key == pygame.K_t and not(is_flying):
                     is_flying = True
                     threading.Thread(target=drone.takeoff).start()
                 if event.key == pygame.K_l and is_flying:
                     is_flying = False
-                    is_tracking = False # Вимикаємо режим слідкування! 
+                    is_tracking = False
                     threading.Thread(target=drone.land).start()
 
         frame = frame_read.frame 
@@ -118,8 +119,6 @@ with FaceDetector.create_from_options(options) as detector:
         )
 
         timestamp += 1
-
-        print(drone.get_battery())
 
         pygame.display.flip() 
         clock.tick(FPS)
