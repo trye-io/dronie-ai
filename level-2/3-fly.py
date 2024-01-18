@@ -14,7 +14,6 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 
 def render_frame(result, output_image, timestamp_ms):
-    # позначаємо що змінна є глобальною
     global error
     
     frame = output_image.numpy_view()
@@ -29,7 +28,7 @@ def render_frame(result, output_image, timestamp_ms):
                 color=(255,0,0),
                 thickness=2
             )
-            center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
+            center_x = bbox.origin_x + bbox.width // 2
         if is_tracking:
             error = track_face(center_x, error)
 

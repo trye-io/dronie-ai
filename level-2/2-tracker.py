@@ -28,7 +28,9 @@ def render_frame(result, output_image, timestamp_ms):
                 color=(255,0,0),
                 thickness=2
             )
-            center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
+            # витягуємо центр виявленного обличчя
+            center_x = bbox.origin_x + bbox.width // 2
+        # якщо дрон у режимі відстеження, тоді викликаємо відстежувач
         if is_tracking:
             error = track_face(center_x, error)
 
