@@ -27,7 +27,7 @@ def render_frame(result, output_image, timestamp_ms):
                 frame,
                 (bbox.origin_x, bbox.origin_y),
                 (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height),
-                color=(255,0,0),
+                color=(255, 0, 0),
                 thickness=2
             )
             print(bbox)
