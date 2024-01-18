@@ -37,7 +37,7 @@ def render_frame(result, output_image, timestamp_ms):
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
-    screen.blit(frame, (0,0))
+    screen.blit(frame, (0, 0))
 
 def track_face(center_x, error):
     current_error = center_x - WIDTH // 2

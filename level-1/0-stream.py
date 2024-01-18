@@ -29,7 +29,7 @@ while is_running:
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
-    screen.blit(frame, (0,0))
+    screen.blit(frame, (0, 0))
         
     pygame.display.flip() 
     clock.tick(FPS)
