@@ -3,7 +3,6 @@ from djitellopy import Tello
 import numpy as np 
 import cv2 
 import mediapipe as mp # завантажуємо mediapipe
-from helpers import draw_bbox # завантажуємо домоміжну функцію для візуалізації
 
 # створюємо псевдоніми 
 BaseOptions = mp.tasks.BaseOptions # базова конфігурація
@@ -15,20 +14,29 @@ VisionRunningMode = mp.tasks.vision.RunningMode # змінна, яка міст�
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite' # шлях до моделі
 
 def render_frame(result, output_image, timestamp_ms):
+    
+    # конвертуємо назад у Numpy масив
+    frame = output_image.numpy_view()
 
-    # малюємо обмежувальну коробку
-    frame = draw_bbox(output_image.numpy_view(), result)
+    # малюємо обмежувальну коробку для усіх виявлених облич
+    # і друкуємо їхні координати
+    if result.detections:
+        for detection in result.detections:
+            bbox = detection.bounding_box
+            cv2.rectangle(
+                frame,
+                (bbox.origin_x, bbox.origin_y),
+                (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height),
+                color=(255,0,0),
+                thickness=2
+            )
+            print(bbox)
 
     # безпосереднє зображення на екрані
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0,0))
-
-    # для усіх виявлених облич, друкуємо їхні координати
-    if result.detections:
-        for detection in result.detections:
-            print(detection.bounding_box)
 
 options = FaceDetectorOptions(
     base_options=BaseOptions(model_asset_path=MODEL_PATH),

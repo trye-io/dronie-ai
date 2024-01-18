@@ -3,7 +3,6 @@ from djitellopy import Tello
 import numpy as np 
 import cv2 
 import mediapipe as mp
-from helpers import draw_bbox
 
 BaseOptions = mp.tasks.BaseOptions
 FaceDetector = mp.tasks.vision.FaceDetector
@@ -16,26 +15,34 @@ MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 def render_frame(result, output_image, timestamp_ms):
     # позначаємо що змінна є глобальною
     global error
+    
+    frame = output_image.numpy_view()
 
-    frame = draw_bbox(output_image.numpy_view(), result)
+    if result.detections:
+        for detection in result.detections:
+            bbox = detection.bounding_box
+            cv2.rectangle(
+                frame,
+                (bbox.origin_x, bbox.origin_y),
+                (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height),
+                color=(255,0,0),
+                thickness=2
+            )
+            center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
+        if is_tracking:
+            error = track_face(center_x, error)
 
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0,0))
 
-    if result.detections:
-        for detection in result.detections:
-            # знаходимо центр зображення по осі x 
-            center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
-        if is_tracking:
-            error = track_face(center_x, error)
-
 def track_face(center_x, error):
     current_error = center_x - WIDTH // 2
     delta = current_error - error
     yaw_velocity = int(PID[0] * current_error + PID[2] * delta)
     print(yaw_velocity)
+
     # потім тут ми передамо команди на дрон за допомогою .send_rc_control()
 
     return current_error

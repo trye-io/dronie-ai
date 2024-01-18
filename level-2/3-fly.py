@@ -3,7 +3,6 @@ from djitellopy import Tello
 import numpy as np 
 import cv2 
 import mediapipe as mp
-from helpers import draw_bbox
 import threading # завантажуємо threding для асинхронного виконання
 
 BaseOptions = mp.tasks.BaseOptions
@@ -15,20 +14,29 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 MODEL_PATH = 'level-2/blaze_face_short_range.tflite'
 
 def render_frame(result, output_image, timestamp_ms):
+    # позначаємо що змінна є глобальною
     global error
+    
+    frame = output_image.numpy_view()
 
-    frame = draw_bbox(output_image.numpy_view(), result)
+    if result.detections:
+        for detection in result.detections:
+            bbox = detection.bounding_box
+            cv2.rectangle(
+                frame,
+                (bbox.origin_x, bbox.origin_y),
+                (bbox.origin_x + bbox.width, bbox.origin_y + bbox.height),
+                color=(255,0,0),
+                thickness=2
+            )
+            center_x = detection.bounding_box.origin_x + detection.bounding_box.width // 2
+        if is_tracking:
+            error = track_face(center_x, error)
 
     frame = np.rot90(frame)
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0,0))
-
-    if result.detections:
-        for detection in result.detections:
-            face_center = detection.bounding_box.origin_x + detection.bounding_box.width // 2
-        if is_tracking:
-            error = track_face(face_center, error)
 
 def track_face(face_center, error):
     current_error = FRAME_CENTER - face_center
