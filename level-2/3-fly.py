@@ -91,7 +91,7 @@ with FaceDetector.create_from_options(options) as detector:
                 if event.key == pygame.K_0:
                     is_tracking = False
                     # передаємо нульові швидкості, які можуть бути ненульові
-                    # з попереднього використання Режиму 1
+                    # з попереднього використання коли is_tracking True
                     drone.send_rc_control(0, 0, 0, 0)
                 # заради безпеки, забезпечуємо зліт та посадку за допомогою 
                 # клавіш T (злетіти) та L (сісти)

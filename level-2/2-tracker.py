@@ -82,7 +82,7 @@ with FaceDetector.create_from_options(options) as detector:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
                     is_tracking = True
-                if event.type == pygame.K_0:
+                if event.key == pygame.K_0:
                     is_tracking = False
 
         frame = frame_read.frame 
