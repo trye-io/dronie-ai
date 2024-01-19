@@ -40,8 +40,7 @@ def track_face(face_center):
     error = FRAME_CENTER - face_center
     yaw_velocity = int(Kp * error)
     # замість друку, передаємо на дрон команди, але тільки якщо дрон в польоті
-    if is_flying: 
-        drone.send_rc_control(0, 0, 0, yaw_velocity)
+    drone.send_rc_control(0, 0, 0, yaw_velocity)
 
 options = FaceDetectorOptions(
     base_options=BaseOptions(model_asset_path=MODEL_PATH),
@@ -92,13 +91,15 @@ with FaceDetector.create_from_options(options) as detector:
                     is_tracking = False
                     # передаємо нульові швидкості, які можуть бути ненульові
                     # з попереднього використання коли is_tracking True
-                    drone.send_rc_control(0, 0, 0, 0)
+                    if is_flying:
+                        drone.send_rc_control(0, 0, 0, 0)
                 # заради безпеки, забезпечуємо зліт та посадку за допомогою 
                 # клавіш T (злетіти) та L (сісти)
                 if event.key == pygame.K_t and not(is_flying):
                     is_flying = True
                     threading.Thread(target=drone.takeoff).start()
                 if event.key == pygame.K_l and is_flying:
+                    drone.send_rc_control(0, 0, 0, 0) # зануляємо усі швидкості
                     is_flying = False
                     is_tracking = False # Вимикаємо режим слідкування! 
                     threading.Thread(target=drone.land).start()

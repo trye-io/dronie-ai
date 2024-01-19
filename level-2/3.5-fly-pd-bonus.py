@@ -46,9 +46,8 @@ def track_face(face_center, error):
     delta = current_error - error 
     # використовуємо диференціал
     yaw_velocity = int(Kp * current_error + Kd * delta)
-    # замість друку, передаємо на дрон команди, але тільки якщо дрон в польоті
-    if is_flying: 
-        drone.send_rc_control(0, 0, 0, yaw_velocity)
+    # замість друку, передаємо на дрон команди
+    drone.send_rc_control(0, 0, 0, yaw_velocity)
 
     # повертаємо поточну помилку, котра в свою чергу стане error
     return current_error
@@ -98,11 +97,13 @@ with FaceDetector.create_from_options(options) as detector:
                     is_tracking = True
                 if event.key == pygame.K_0:
                     is_tracking = False
-                    drone.send_rc_control(0, 0, 0, 0)
+                    if is_flying:
+                        drone.send_rc_control(0, 0, 0, 0)
                 if event.key == pygame.K_t and not(is_flying):
                     is_flying = True
                     threading.Thread(target=drone.takeoff).start()
                 if event.key == pygame.K_l and is_flying:
+                    drone.send_rc_control(0, 0, 0, 0)
                     is_flying = False
                     is_tracking = False
                     threading.Thread(target=drone.land).start()
