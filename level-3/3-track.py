@@ -31,7 +31,7 @@ is_running = True
 
 GROUNDED = 0
 MANUAL = 1
-TRACKING = 2
+AUTOPILOT = 2
 mode = GROUNDED
 
 box_x = 0
@@ -56,14 +56,14 @@ while is_running:
             if event.key == pygame.K_1:
                 if mode == GROUNDED:
                     threading.Thread(target=drone.takeoff).start()
-                if mode == TRACKING:
+                if mode == AUTOPILOT:
                     left_right_velocity = 0
                     forward_backward_velocity = 0
                     up_down_velocity = 0
                     yaw_velocity = 0
                 mode = MANUAL
             if event.key == pygame.K_2 and mode == MANUAL:
-                mode = TRACKING
+                mode = AUTOPILOT
 
         if mode == MANUAL:
             if event.type == pygame.KEYDOWN:
@@ -124,7 +124,7 @@ while is_running:
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
 
-    if mode == TRACKING:
+    if mode == AUTOPILOT:
         if results[0].boxes:
             error_x = TARGET_X - box_x
             error_y = TARGET_Y - box_y
@@ -139,7 +139,7 @@ while is_running:
             up_down_velocity = 0
             yaw_velocity = 0
 
-    if mode == MANUAL or mode == TRACKING:
+    if mode == MANUAL or mode == AUTOPILOT:
         drone.send_rc_control(
             left_right_velocity,
             forward_backward_velocity,

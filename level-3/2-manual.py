@@ -30,7 +30,7 @@ is_running = True
 
 GROUNDED = 0 # режим на землі
 MANUAL = 1 # режим ручного керування
-TRACKING = 2 # режим автопілота
+AUTOPILOT = 2 # режим автопілота
 mode = GROUNDED
 
 while is_running: 
@@ -49,14 +49,14 @@ while is_running:
             if event.key == pygame.K_1:
                 if mode == GROUNDED:
                     threading.Thread(target=drone.takeoff).start()
-                if mode == TRACKING:
+                if mode == AUTOPILOT:
                     left_right_velocity = 0
                     forward_backward_velocity = 0
                     up_down_velocity = 0
                     yaw_velocity = 0
                 mode = MANUAL
             if event.key == pygame.K_2 and mode == MANUAL:
-                mode = TRACKING
+                mode = AUTOPILOT
 
         if mode == MANUAL:
             if event.type == pygame.KEYDOWN:
@@ -115,7 +115,7 @@ while is_running:
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
     
-    if mode == MANUAL or mode == TRACKING:
+    if mode == MANUAL or mode == AUTOPILOT:
         drone.send_rc_control(
             left_right_velocity,
             forward_backward_velocity,
