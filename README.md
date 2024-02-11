@@ -19,3 +19,11 @@
 - 🎮 Додаємо ПІД регулятор (тільки пропорційний компонент): [2-tracker.py](https://github.com/trye-io/dronie-ai/blob/main/level-2/2-tracker.py)
 - 🛫 Злітаємо: [3-fly.py](https://github.com/trye-io/dronie-ai/blob/main/level-2/3-fly.py)
 - 🎮 Бонус: Додаємо диференціальну ПІД регулятора: [3.5-fly-pd-bonus.py](https://github.com/trye-io/dronie-ai/blob/main/level-2/3.5-fly-pd-bonus.py)
+
+## Рівень 3
+
+**Відео у YouTube:** TBA
+
+- ⛩️ Виявляємо браму за допомогою моделі YOLO: [1-detect.py](https://github.com/trye-io/dronie-ai/blob/main/level-3/1-detect.py)
+- 🎮 Додаємо ручне керування дроном: [2-manual.py](https://github.com/trye-io/dronie-ai/blob/main/level-3/3-manual.py)
+- 🤖 Додаємо автопілот у вигляді пропорційнийного регулятора: [3-track.py](https://github.com/trye-io/dronie-ai/blob/main/level-3/3-track.py)
