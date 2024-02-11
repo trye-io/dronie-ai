@@ -45,12 +45,10 @@ while is_running:
         if event.type == pygame.QUIT:
             if mode != GROUNDED: 
                 threading.Thread(target=drone.land).start()
-                mode = GROUNDED
             drone.streamoff()
             is_running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_0 and mode != GROUNDED:
-                # drone.send_rc_control(0, 0, 0, 0)
                 threading.Thread(target=drone.land).start()
                 mode = GROUNDED
             if event.key == pygame.K_1:
