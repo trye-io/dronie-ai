@@ -36,10 +36,11 @@ mode = GROUNDED
 while is_running: 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            if mode != GROUNDED: 
+            if mode != GROUNDED: # злітаємо
                 threading.Thread(target=drone.land).start()
             drone.streamoff()
             is_running = False
+        # перемикаємо режим з клавіатури
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_0 and mode != GROUNDED:
                 threading.Thread(target=drone.land).start()
@@ -55,7 +56,7 @@ while is_running:
                 mode = MANUAL
             if event.key == pygame.K_2 and mode == MANUAL:
                 mode = AUTOPILOT
-
+        # зчитуємо швидкості з клавіатури, якщо дрон у ручному режимі
         if mode == MANUAL:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
@@ -113,6 +114,7 @@ while is_running:
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
     
+    # якщо дрон не на землі, відправляємо швидкості на нього
     if mode == MANUAL or mode == AUTOPILOT:
         drone.send_rc_control(
             left_right_velocity,
