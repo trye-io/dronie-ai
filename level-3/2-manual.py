@@ -50,44 +50,49 @@ while is_running:
                 if mode == GROUNDED:
                     threading.Thread(target=drone.takeoff).start()
                 if mode == TRACKING:
-                    drone.send_rc_control(0, 0, 0, 0)
+                    left_right_velocity = 0
+                    forward_backward_velocity = 0
+                    up_down_velocity = 0
+                    yaw_velocity = 0
                 mode = MANUAL
             if event.key == pygame.K_2 and mode == MANUAL:
                 mode = TRACKING
 
-            if event.key == pygame.K_LEFT:
-                left_right_velocity = 50
-            if event.key == pygame.K_RIGHT:
-                left_right_velocity = -50
-            if event.key == pygame.K_UP:
-                forward_backward_velocity = 50
-            if event.key == pygame.K_DOWN:
-                forward_backward_velocity = -50
-            if event.key == pygame.K_w:
-                up_down_velocity = 50
-            if event.key == pygame.K_s:
-                up_down_velocity = -50
-            if event.key == pygame.K_a:
-                yaw_velocity = 50
-            if event.key == pygame.K_d:
-                yaw_velocity = -50
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT:
-                left_right_velocity = 0
-            if event.key == pygame.K_RIGHT:
-                left_right_velocity = 0
-            if event.key == pygame.K_UP:
-                forward_backward_velocity = 0
-            if event.key == pygame.K_DOWN:
-                forward_backward_velocity = 0
-            if event.key == pygame.K_w:
-                up_down_velocity = 0
-            if event.key == pygame.K_s:
-                up_down_velocity = 0
-            if event.key == pygame.K_a:
-                yaw_velocity = 0
-            if event.key == pygame.K_d:
-                yaw_velocity = 0
+        if mode == MANUAL:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    left_right_velocity = -50
+                if event.key == pygame.K_RIGHT:
+                    left_right_velocity = 50
+                if event.key == pygame.K_UP:
+                    forward_backward_velocity = 50
+                if event.key == pygame.K_DOWN:
+                    forward_backward_velocity = -50
+                if event.key == pygame.K_w:
+                    up_down_velocity = 50
+                if event.key == pygame.K_s:
+                    up_down_velocity = -50
+                if event.key == pygame.K_a:
+                    yaw_velocity = -50
+                if event.key == pygame.K_d:
+                    yaw_velocity = 50
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    left_right_velocity = 0
+                if event.key == pygame.K_RIGHT:
+                    left_right_velocity = 0
+                if event.key == pygame.K_UP:
+                    forward_backward_velocity = 0
+                if event.key == pygame.K_DOWN:
+                    forward_backward_velocity = 0
+                if event.key == pygame.K_w:
+                    up_down_velocity = 0
+                if event.key == pygame.K_s:
+                    up_down_velocity = 0
+                if event.key == pygame.K_a:
+                    yaw_velocity = 0
+                if event.key == pygame.K_d:
+                    yaw_velocity = 0
 
     frame = frame_read.frame 
     frame = cv2.resize(frame, (WIDTH, HEIGHT))
@@ -109,17 +114,14 @@ while is_running:
     frame = np.flipud(frame) 
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
-
     
-    if mode == MANUAL:
+    if mode == MANUAL or mode == TRACKING:
         drone.send_rc_control(
             left_right_velocity,
             forward_backward_velocity,
             up_down_velocity,
             yaw_velocity
         )
-    if mode == TRACKING:
-        print("tracking")
         
     pygame.display.flip() 
     clock.tick(FPS)

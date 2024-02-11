@@ -3,8 +3,7 @@ from djitellopy import Tello
 import numpy as np 
 import cv2 
 from ultralytics import YOLO
-import numpy # завантажуємо numpy для типу змінної
-import threading # завантажуємо threding для потокового виконання
+import threading 
 
 WIDTH = 640
 HEIGHT = 480
@@ -16,8 +15,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 FPS = 5 # Нижча кількість FPS 
 clock = pygame.time.Clock() 
 
-MODEL_PATH = "level-3/box-detector.pt"
-model = YOLO(MODEL_PATH)
+model = YOLO("level-3/box-detector.pt")
 
 drone = Tello()
 drone.connect()
@@ -31,10 +29,10 @@ yaw_velocity = 0
 
 is_running = True
 
-status = 0
 GROUNDED = 0
-MANUAL = 1 # manual mode
-TRACKING = 2 # tracking mode
+MANUAL = 1
+TRACKING = 2
+mode = GROUNDED
 
 box_x = 0
 box_y = 0
@@ -45,29 +43,29 @@ Kp_y = 0.3
 while is_running: 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            if status != GROUNDED: 
+            if mode != GROUNDED: 
                 threading.Thread(target=drone.land).start()
-                status = GROUNDED
+                mode = GROUNDED
             drone.streamoff()
             is_running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_0 and status != GROUNDED:
+            if event.key == pygame.K_0 and mode != GROUNDED:
                 # drone.send_rc_control(0, 0, 0, 0)
                 threading.Thread(target=drone.land).start()
-                status = GROUNDED
+                mode = GROUNDED
             if event.key == pygame.K_1:
-                if status == GROUNDED:
+                if mode == GROUNDED:
                     threading.Thread(target=drone.takeoff).start()
-                if status == TRACKING:
+                if mode == TRACKING:
                     left_right_velocity = 0
                     forward_backward_velocity = 0
                     up_down_velocity = 0
                     yaw_velocity = 0
-                status = MANUAL
-            if event.key == pygame.K_2 and status == MANUAL:
-                status = TRACKING
+                mode = MANUAL
+            if event.key == pygame.K_2 and mode == MANUAL:
+                mode = TRACKING
 
-        if status == MANUAL:
+        if mode == MANUAL:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     left_right_velocity = -50
@@ -104,19 +102,19 @@ while is_running:
                     yaw_velocity = 0
 
     frame = frame_read.frame 
-    frame = cv2.resize(frame, (WIDTH, HEIGHT)) # зменшуємо розмір зображення
+    frame = cv2.resize(frame, (WIDTH, HEIGHT))
 
     results = model.predict(frame, verbose=False)
 
     for bbox in results[0].boxes:
-        xyxy = bbox.numpy().xyxy.astype(numpy.int64).flatten()
+        xyxy = bbox.numpy().xyxy.astype(np.int8).flatten()
         box_x = xyxy[0] + (xyxy[2] - xyxy[0]) / 2
         box_y = xyxy[1] + (xyxy[3] - xyxy[1]) / 2
         cv2.rectangle(
             frame,
             (xyxy[0], xyxy[1]),
             (xyxy[2], xyxy[3]),
-            color=(255, 0, 0),
+            color=(0, 0, 255),
             thickness=2
         )
 
@@ -126,7 +124,7 @@ while is_running:
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
 
-    if status == TRACKING:
+    if mode == TRACKING:
         if results[0].boxes:
             error_x = TARGET_X - box_x
             error_y = TARGET_Y - box_y
@@ -141,7 +139,7 @@ while is_running:
             up_down_velocity = 0
             yaw_velocity = 0
 
-    if status == MANUAL or status == TRACKING:
+    if mode == MANUAL or mode == TRACKING:
         drone.send_rc_control(
             left_right_velocity,
             forward_backward_velocity,
