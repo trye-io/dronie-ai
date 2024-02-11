@@ -2,18 +2,17 @@ import pygame
 from djitellopy import Tello
 import numpy as np 
 import cv2 
-from ultralytics import YOLO # Вантажемо ultralytcs
-import numpy
+from ultralytics import YOLO # завантажуємо ultralytics
 
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 640 # менша ширина
+HEIGHT = 480 # менша висота
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-FPS = 5 # Нижча кількість FPS 
+FPS = 5 # менша частота кадрів
 clock = pygame.time.Clock() 
 
-model = YOLO("level-3/box-detector.pt")
+model = YOLO("level-3/box-detector.pt") # завантажуємо модель
 
 drone = Tello()
 drone.connect()
@@ -31,15 +30,17 @@ while is_running:
     frame = frame_read.frame 
     frame = cv2.resize(frame, (WIDTH, HEIGHT)) # зменшуємо розмір зображення
 
+    # виявляємо обмежувальні коробки на зображенні
     results = model.predict(frame)
 
+    # проходимо по усім виявленим коробкам та візуалізуємо їх
     for bbox in results[0].boxes:
-        xyxy = bbox.numpy().xyxy.astype(numpy.int64).flatten()
+        xyxy = bbox.numpy().xyxy.astype(np.int8).flatten()
         cv2.rectangle(
             frame,
             (xyxy[0], xyxy[1]),
             (xyxy[2], xyxy[3]),
-            color=(255, 0, 0),
+            color=(0, 0, 255),
             thickness=2
         )
 
