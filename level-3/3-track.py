@@ -12,7 +12,7 @@ TARGET_Y = 150 # координату висоти взяли з власног�
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-FPS = 5 # Нижча кількість FPS 
+FPS = 5
 clock = pygame.time.Clock() 
 
 model = YOLO("level-3/box-detector.pt")
@@ -34,11 +34,11 @@ MANUAL = 1
 AUTOPILOT = 2
 mode = GROUNDED
 
-box_x = 0
-box_y = 0
+box_x = 0 # координата x центра обмежувальної коробки 
+box_y = 0 # координата y центра обмежувальної коробки 
 
-Kp_x = -0.2
-Kp_y = 0.3
+Kp_x = -0.2 # коефіцієнт пропроційного регулятора для осі x 
+Kp_y = 0.3 # коефіцієнт пропроційного регулятора для осі y 
 
 while is_running: 
     for event in pygame.event.get():
@@ -102,11 +102,12 @@ while is_running:
     frame = frame_read.frame 
     frame = cv2.resize(frame, (WIDTH, HEIGHT))
 
-    results = model.predict(frame, verbose=False)
+    results = model.predict(frame, verbose=False) # вимикаємо детальний друк
 
     for bbox in results[0].boxes:
         xyxy = bbox.numpy().xyxy.astype(np.int8).flatten()
-        box_x = xyxy[0] + (xyxy[2] - xyxy[0]) / 2
+        # розраховуємо цетр обмежувальної коробки 
+        box_x = xyxy[0] + (xyxy[2] - xyxy[0]) / 2 
         box_y = xyxy[1] + (xyxy[3] - xyxy[1]) / 2
         cv2.rectangle(
             frame,
@@ -122,6 +123,7 @@ while is_running:
     frame = pygame.surfarray.make_surface(frame)
     screen.blit(frame, (0, 0))
 
+    # розраховуємо швидкості для автопілоту 
     if mode == AUTOPILOT:
         if results[0].boxes:
             error_x = TARGET_X - box_x
