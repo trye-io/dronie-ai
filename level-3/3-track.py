@@ -8,7 +8,7 @@ import threading
 WIDTH = 640
 HEIGHT = 480
 TARGET_X = WIDTH / 2 # середина екрану
-TARGET_Y = 150 # координату висоти взяли з власного пролітання через рамку
+TARGET_Y = 120 # координату висоти взяли з власного пролітання через рамку
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -105,7 +105,7 @@ while is_running:
     results = model.predict(frame, verbose=False) # вимикаємо детальний друк
 
     for bbox in results[0].boxes:
-        xyxy = bbox.numpy().xyxy.astype(np.int8).flatten()
+        xyxy = bbox.numpy().xyxy.astype(np.int_).flatten()
         # розраховуємо цетр обмежувальної коробки 
         box_x = xyxy[0] + (xyxy[2] - xyxy[0]) / 2 
         box_y = xyxy[1] + (xyxy[3] - xyxy[1]) / 2

@@ -99,7 +99,7 @@ while is_running:
     results = model.predict(frame)
 
     for bbox in results[0].boxes:
-        xyxy = bbox.numpy().xyxy.astype(np.int8).flatten()
+        xyxy = bbox.numpy().xyxy.astype(np.int_).flatten()
         cv2.rectangle(
             frame,
             (xyxy[0], xyxy[1]),
